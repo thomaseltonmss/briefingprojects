@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel de Briefings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EEF1F6;
+    --sheet: #FFFFFF;
+    --ink: #1B2440;
+    --ink-soft: #56607A;
+    --line: #D3D9E5;
+    --cobalt: #3346D3;
+    --cobalt-soft: #E8EBFB;
+    --marker: #F4DB4B;
+    --danger: #C23B3B;
+    --ok: #1E7A55;
+    --radius-lg: 18px;
+    --radius-sm: 8px;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.55 var(--body); }
+  button, input, select { font: inherit; color: inherit; }
+  h1, h2, h3 { font-family: var(--display); letter-spacing: -0.02em; margin: 0; }
+
+  /* ---------- Login ---------- */
+  .login { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+  .login-card { width: 100%; max-width: 400px; background: var(--sheet); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 36px 32px; }
+  .login-card h1 { font-size: 2rem; font-weight: 800; line-height: 1.05; margin-bottom: 8px; }
+  .login-card h1 mark { background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%); color: inherit; }
+  .login-card p { color: var(--ink-soft); margin: 0 0 24px; }
+  label.field { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 16px; }
+  label.field input { display: block; width: 100%; margin-top: 6px; padding: 11px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; font-weight: 400; }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+  .btn { border: 0; border-radius: var(--radius-sm); padding: 12px 18px; font-weight: 600; cursor: pointer; background: var(--cobalt); color: #fff; }
+  .btn:disabled { opacity: .6; cursor: wait; }
+  .btn.ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); padding: 8px 12px; font-size: .9rem; }
+  .login-card .btn { width: 100%; }
+  .msg { color: var(--danger); font-size: .9rem; margin: 0 0 14px; }
+
+  /* ---------- Painel ---------- */
+  .app { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
+  .side { background: var(--sheet); border-right: 1px solid var(--line); display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0; }
+  .side-head { padding: 24px 20px 16px; border-bottom: 1px solid var(--line); }
+  .side-head .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .side-head h1 { font-size: 1.35rem; font-weight: 800; }
+  .search { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 3px 11px; font-size: .82rem; cursor: pointer; color: var(--ink-soft); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .list { overflow-y: auto; padding: 10px; flex: 1; }
+  .card {
+    all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer;
+    padding: 14px 14px; border-radius: 12px; margin-bottom: 4px; border: 1px solid transparent;
+  }
+  .card:hover { background: var(--paper); }
+  .card[aria-current="true"] { background: var(--cobalt-soft); border-color: #C7CEF5; }
+  .card:focus-visible { outline: 3px solid var(--cobalt); }
+  .card .co { font: 700 1.05rem/1.2 var(--display); display: block; }
+  .card .who { color: var(--ink-soft); font-size: .88rem; display: block; margin-top: 2px; }
+  .card .meta { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: .8rem; color: var(--ink-soft); }
+  .empty-list { padding: 24px 12px; color: var(--ink-soft); text-align: center; }
+
+  .badge { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: .78rem; font-weight: 600; }
+  .st-novo { background: var(--marker); color: #4A3F00; }
+  .st-em_analise { background: #DCE2FF; color: #26339E; }
+  .st-aprovado { background: #D5F0E3; color: var(--ok); }
+  .st-arquivado { background: #E4E7EE; color: var(--ink-soft); }
+
+  .main { padding: 40px clamp(20px, 4vw, 56px) 96px; max-width: 980px; }
+  .placeholder { margin-top: 20vh; text-align: center; color: var(--ink-soft); }
+  .placeholder h2 { color: var(--ink); font-size: 1.6rem; margin-bottom: 6px; }
+
+  .hero { margin-bottom: 28px; }
+  .hero .eyebrow { color: var(--ink-soft); font-size: .9rem; margin-bottom: 6px; }
+  .hero h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; line-height: 1.02; }
+  .hero h2 mark { background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%); color: inherit; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 22px; }
+  .fact { background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+  .fact small { display: block; color: var(--ink-soft); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+  .fact span, .fact a { display: block; font-weight: 600; overflow-wrap: anywhere; color: var(--ink); text-decoration: none; }
+  .fact a { color: var(--cobalt); }
+  .status-row { display: flex; align-items: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .status-row select { padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; }
+
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; position: sticky; top: 0; background: var(--paper); padding: 10px 0; z-index: 2; margin-bottom: 8px; }
+  .tab { border: 1px solid var(--line); background: var(--sheet); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-size: .9rem; font-weight: 500; }
+  .tab[aria-selected="true"] { background: var(--cobalt); border-color: var(--cobalt); color: #fff; }
+
+  .section { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 28px clamp(18px, 3vw, 36px); margin-bottom: 18px; }
+  .section h3 { font-size: 1.35rem; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+  .section h3 .n { width: 30px; height: 30px; border-radius: 50%; background: var(--cobalt-soft); color: var(--cobalt); display: grid; place-items: center; font-size: .9rem; }
+  .qa { padding: 14px 0; border-top: 1px solid var(--line); }
+  .qa:first-of-type { border-top: 0; padding-top: 0; }
+  .q { color: var(--ink-soft); font-size: .88rem; font-weight: 600; margin-bottom: 4px; }
+  .a { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .a.none { color: #9AA2B5; font-style: italic; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { background: var(--cobalt-soft); color: #26339E; border-radius: 999px; padding: 3px 12px; font-size: .9rem; font-weight: 500; }
+  .persona { background: var(--paper); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+  .persona b { font-family: var(--display); display: block; }
+
+  @media (max-width: 820px) {
+    .app { grid-template-columns: 1fr; }
+    .side { position: static; height: auto; max-height: 55vh; }
+    .app.detail .side { display: none; }
+    .app:not(.detail) .main { display: none; }
+    .back { display: inline-flex !important; }
+  }
+  .back { display: none; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<main class="login" id="loginView" hidden>
+  <form class="login-card" id="loginForm">
+    <h1>Painel de <mark>briefings</mark></h1>
+    <p>Acesso restrito. Entre com sua conta de administrador.</p>
+    <label class="field">E-mail
+      <input type="email" id="email" autocomplete="username" required>
+    </label>
+    <label class="field">Senha
+      <input type="password" id="password" autocomplete="current-password" required>
+    </label>
+    <p class="msg" id="loginErr" hidden role="alert"></p>
+    <button class="btn" id="loginBtn" type="submit">Entrar</button>
+  </form>
+</main>
+
+<!-- Painel -->
+<div class="app" id="appView" hidden>
+  <aside class="side">
+    <div class="side-head">
+      <div class="top">
+        <h1>Briefings</h1>
+        <button class="btn ghost" id="logoutBtn" type="button">Sair</button>
+      </div>
+      <input class="search" id="search" type="search" placeholder="Buscar empresa ou cliente…" aria-label="Buscar">
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="list" id="list" role="list"></div>
+  </aside>
+  <section class="main" id="main" aria-live="polite"></section>
+</div>
+
+<script>
+const SUPABASE_URL = "https://ojftqnrxkrphzsloyeoc.supabase.co";
+const SUPABASE_KEY = "sb_publishable_cKszojHZ1dmefxoWxFkL0Q_o8Yx22C7";
+const SESSION_KEY = "briefing-admin-session";
+
+const STATUS = { novo: "Novo", em_analise: "Em análise", aprovado: "Aprovado", arquivado: "Arquivado" };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let session = null;
+let rows = [];
+let selectedId = null;
+let filter = "todos";
+let query = "";
+
+/* ---------- Sessão ---------- */
+function loadSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) { return null; } }
+function storeSession(s) {
+  session = s;
+  try { s ? localStorage.setItem(SESSION_KEY, JSON.stringify(s)) : localStorage.removeItem(SESSION_KEY); } catch (e) {}
+}
+async function authRequest(path, body) {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.msg || json.error_description || json.message || "Falha na autenticação");
+  return { access_token: json.access_token, refresh_token: json.refresh_token, expires_at: Math.floor(Date.now() / 1000) + json.expires_in };
+}
+async function freshToken() {
+  if (!session) throw new Error("no session");
+  if (session.expires_at - 60 < Date.now() / 1000) {
+    storeSession(await authRequest("token?grant_type=refresh_token", { refresh_token: session.refresh_token }));
+  }
+  return session.access_token;
+}
+async function api(path, opts = {}) {
+  const token = await freshToken();
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(opts.headers || {}) }
+  });
+  if (!res.ok) throw new Error((await res.text()) || res.statusText);
+  return res.status === 204 ? null : res.json();
+}
+
+/* ---------- Login ---------- */
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("loginBtn"), err = $("loginErr");
+  err.hidden = true; btn.disabled = true; btn.textContent = "Entrando…";
+  try {
+    storeSession(await authRequest("token?grant_type=password", { email: $("email").value.trim(), password: $("password").value }));
+    $("password").value = "";
+    await openPanel();
+  } catch (ex) {
+    err.textContent = /invalid/i.test(ex.message) ? "E-mail ou senha incorretos." : ex.message;
+    err.hidden = false;
+  } finally {
+    btn.disabled = false; btn.textContent = "Entrar";
+  }
+});
+$("logoutBtn").addEventListener("click", () => { storeSession(null); rows = []; selectedId = null; show("login"); });
+
+function show(view) {
+  $("loginView").hidden = view !== "login";
+  $("appView").hidden = view !== "app";
+}
+
+/* ---------- Dados ---------- */
+async function openPanel() {
+  show("app");
+  $("list").innerHTML = `<p class="empty-list">Carregando…</p>`;
+  try {
+    rows = await api("briefings?select=*&order=created_at.desc");
+  } catch (e) {
+    console.error(e);
+    storeSession(null); show("login");
+    $("loginErr").textContent = "Não foi possível carregar. Entre novamente.";
+    $("loginErr").hidden = false;
+    return;
+  }
+  renderChips(); renderList();
+  if (rows.length && !selectedId && window.innerWidth > 820) select(rows[0].id);
+  else renderMain();
+}
+
+/* ---------- Lista ---------- */
+function visibleRows() {
+  const q = query.toLowerCase();
+  return rows.filter(r =>
+    (filter === "todos" || r.status === filter) &&
+    (!q || [r.empresa, r.cliente_nome, r.projeto_nome, r.cliente_email].some(v => (v || "").toLowerCase().includes(q))));
+}
+function renderChips() {
+  const count = k => k === "todos" ? rows.length : rows.filter(r => r.status === k).length;
+  $("chips").innerHTML = [["todos", "Todos"], ...Object.entries(STATUS)].map(([k, l]) =>
+    `<button class="chip" type="button" data-f="${k}" aria-pressed="${filter === k}">${l} · ${count(k)}</button>`).join("");
+}
+function fmtDate(iso) { return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }); }
+function renderList() {
+  const v = visibleRows();
+  $("list").innerHTML = v.length ? v.map(r => `
+    <button class="card" role="listitem" data-id="${r.id}" aria-current="${r.id === selectedId}">
+      <span class="co">${esc(r.empresa || r.cliente_nome)}</span>
+      <span class="who">${esc(r.empresa ? r.cliente_nome : (r.projeto_nome || r.cliente_email))}</span>
+      <span class="meta"><span class="badge st-${r.status}">${STATUS[r.status] || r.status}</span><span>${fmtDate(r.created_at)}</span></span>
+    </button>`).join("") : `<p class="empty-list">${rows.length ? "Nenhum resultado." : "Ainda não há briefings enviados."}</p>`;
+}
+$("chips").addEventListener("click", e => {
+  const b = e.target.closest("[data-f]"); if (!b) return;
+  filter = b.dataset.f; renderChips(); renderList();
+});
+$("search").addEventListener("input", e => { query = e.target.value; renderList(); });
+$("list").addEventListener("click", e => {
+  const c = e.target.closest("[data-id]"); if (c) select(c.dataset.id);
+});
+
+/* ---------- Detalhe ---------- */
+function select(id) {
+  selectedId = id;
+  $("appView").classList.add("detail");
+  renderList(); renderMain();
+  window.scrollTo({ top: 0 });
+}
+function renderValue(v) {
+  if (Array.isArray(v)) {
+    if (!v.length) return `<div class="a none">Não respondido</div>`;
+    if (typeof v[0] === "object") {
+      return v.map(p => `<div class="persona"><b>${esc(p.perfil || "—")}</b>${esc(p.papel || "")}</div>`).join("");
+    }
+    return `<div class="tags">${v.map(x => `<span class="tag">${esc(x)}</span>`).join("")}</div>`;
+  }
+  const s = String(v ?? "").trim();
+  if (!s) return `<div class="a none">Não respondido</div>`;
+  return `<div class="a">${esc(s)}</div>`;
+}
+function renderMain() {
+  const r = rows.find(x => x.id === selectedId);
+  const main = $("main");
+  if (!r) {
+    main.innerHTML = `<div class="placeholder"><h2>Selecione uma empresa</h2><p>Escolha um briefing na lista para ver as respostas.</p></div>`;
+    return;
+  }
+  const sections = Object.entries(r.respostas || {});
+  const phone = (r.cliente_telefone || "").replace(/\D/g, "");
+  main.innerHTML = `
+    <button class="btn ghost back" id="backBtn" type="button">← Voltar à lista</button>
+    <header class="hero">
+      <div class="eyebrow">Enviado em ${fmtDate(r.created_at)} às ${new Date(r.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
+      <h2><mark>${esc(r.empresa || r.cliente_nome)}</mark></h2>
+      <div class="facts">
+        <div class="fact"><small>Contato</small><span>${esc(r.cliente_nome)}</span></div>
+        <div class="fact"><small>E-mail</small><a href="mailto:${esc(r.cliente_email)}">${esc(r.cliente_email)}</a></div>
+        ${r.cliente_telefone ? `<div class="fact"><small>WhatsApp</small><a href="https://wa.me/${esc(phone)}" target="_blank" rel="noopener">${esc(r.cliente_telefone)}</a></div>` : ""}
+        ${r.projeto_nome ? `<div class="fact"><small>Projeto</small><span>${esc(r.projeto_nome)}</span></div>` : ""}
+        ${r.tipo_projeto ? `<div class="fact"><small>Tipo</small><span>${esc(r.tipo_projeto)}</span></div>` : ""}
+        ${r.orcamento ? `<div class="fact"><small>Investimento</small><span>${esc(r.orcamento)}</span></div>` : ""}
+        ${r.prazo ? `<div class="fact"><small>Prazo</small><span>${esc(r.prazo)}</span></div>` : ""}
+      </div>
+      <div class="status-row">
+        <label for="statusSel"><b>Status</b></label>
+        <select id="statusSel">${Object.entries(STATUS).map(([k, l]) => `<option value="${k}"${k === r.status ? " selected" : ""}>${l}</option>`).join("")}</select>
+        <span id="saveNote" aria-live="polite" style="color:var(--ink-soft);font-size:.9rem"></span>
+      </div>
+    </header>
+    <nav class="tabs" aria-label="Seções">
+      ${sections.map(([t], i) => `<button class="tab" type="button" data-jump="s${i}" aria-selected="false">${i + 1}. ${esc(t)}</button>`).join("")}
+    </nav>
+    ${sections.map(([title, qa], i) => `
+      <article class="section" id="s${i}">
+        <h3><span class="n">${i + 1}</span>${esc(title)}</h3>
+        ${Object.entries(qa).map(([q, a]) => `<div class="qa"><div class="q">${esc(q)}</div>${renderValue(a)}</div>`).join("")}
+      </article>`).join("")}`;
+}
+$("main").addEventListener("click", e => {
+  if (e.target.id === "backBtn") { $("appView").classList.remove("detail"); return; }
+  const t = e.target.closest("[data-jump]");
+  if (t) document.getElementById(t.dataset.jump).scrollIntoView({ behavior: "smooth", block: "start" });
+});
+$("main").addEventListener("change", async e => {
+  if (e.target.id !== "statusSel") return;
+  const r = rows.find(x => x.id === selectedId), note = $("saveNote"), status = e.target.value;
+  note.textContent = "Salvando…";
+  try {
+    await api(`briefings?id=eq.${r.id}`, { method: "PATCH", body: JSON.stringify({ status }), headers: { Prefer: "return=minimal" } });
+    r.status = status;
+    note.textContent = "Salvo ✓";
+    renderChips(); renderList();
+  } catch (ex) {
+    console.error(ex);
+    e.target.value = r.status;
+    note.textContent = "Não foi possível salvar.";
+  }
+});
+
+/* ---------- Início ---------- */
+session = loadSession();
+if (session) openPanel(); else show("login");
+</script>
+</body>
+</html>
